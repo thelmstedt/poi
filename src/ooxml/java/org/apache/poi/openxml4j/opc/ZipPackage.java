@@ -503,10 +503,7 @@ public final class ZipPackage extends OPCPackage {
      */
     @Override
     protected PackagePart getPartImpl(PackagePartName partName) {
-        if (partList.containsKey(partName)) {
-            return partList.get(partName);
-        }
-        return null;
+        return partList.get(partName);
     }
 
 	/**
