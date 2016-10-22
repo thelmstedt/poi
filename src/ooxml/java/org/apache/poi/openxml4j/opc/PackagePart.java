@@ -135,7 +135,7 @@ public abstract class PackagePart implements RelationshipSource, Comparable<Pack
 	public PackageRelationship findExistingRelation(PackagePart packagePart) {
         String ppn = packagePart.getPartName().getName();
         try {
-            for (PackageRelationship pr : this.getRelationships()) {
+            for (PackageRelationship pr : this._relationships) {
                 if (pr.getTargetMode() == TargetMode.EXTERNAL) {
                     continue;
                 }
@@ -471,11 +471,7 @@ public abstract class PackagePart implements RelationshipSource, Comparable<Pack
 	 * @see org.apache.poi.openxml4j.opc.RelationshipSource#isRelationshipExists(org.apache.poi.openxml4j.opc.PackageRelationship)
 	 */
 	public boolean isRelationshipExists(PackageRelationship rel) {
-		for (PackageRelationship r : _relationships) {
-			if (r == rel)
-				return true;
-		}
-        return false;
+		return _relationships.getRelationshipByID(rel.getId()) != null;
 	}
 
    /**
@@ -489,27 +485,26 @@ public abstract class PackagePart implements RelationshipSource, Comparable<Pack
        if(! isRelationshipExists(rel)) {
           throw new IllegalArgumentException("Relationship " + rel + " doesn't start with this part " + _partName);
        }
-       
-       // Get the target URI, excluding any relative fragments
-       URI target = rel.getTargetURI();
-       if(target.getFragment() != null) {
-          String t = target.toString();
-          try {
-             target = new URI( t.substring(0, t.indexOf('#')) );
-          } catch(URISyntaxException e) {
-             throw new InvalidFormatException("Invalid target URI: " + target);
-          }
-       }
-   
-       // Turn that into a name, and fetch
-       PackagePartName relName = PackagingURIHelper.createPartName(target);
-       PackagePart part = _container.getPart(relName);
-       if (part == null) {
-           throw new IllegalArgumentException("No part found for relationship " + rel);
-       }
-       return part;
-   }
-   
+	   // Get the target URI, excluding any relative fragments
+	   URI target = rel.getTargetURI();
+	   if(target.getFragment() != null) {
+		   String t = target.toString();
+		   try {
+			   target = new URI( t.substring(0, t.indexOf('#')) );
+		   } catch(URISyntaxException e) {
+			   throw new InvalidFormatException("Invalid target URI: " + target);
+		   }
+	   }
+
+		// Turn that into a name, and fetch
+		PackagePartName relName = PackagingURIHelper.createPartName(target);
+		PackagePart part = _container.getPart(relName);
+		if (part == null) {
+            throw new IllegalArgumentException("No part found for relationship " + rel);
+        }
+		return part;
+	}
+
 	/**
 	 * Get the input stream of this part to read its content.
 	 *
