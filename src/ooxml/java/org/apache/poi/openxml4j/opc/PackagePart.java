@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.apache.poi.POIXMLException;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.InvalidOperationException;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
@@ -124,6 +125,30 @@ public abstract class PackagePart implements RelationshipSource, Comparable<Pack
 			String contentType) throws InvalidFormatException {
 		this(pack, partName, new ContentType(contentType));
 	}
+
+	/**
+	 * Check if the new part was already added before via PackagePart.addRelationship()
+	 *
+	 * @param packagePart to find the relationship for
+	 * @return The existing relationship, or null if there isn't yet one
+	 */
+	public PackageRelationship findExistingRelation(PackagePart packagePart) {
+        String ppn = packagePart.getPartName().getName();
+        try {
+            for (PackageRelationship pr : this.getRelationships()) {
+                if (pr.getTargetMode() == TargetMode.EXTERNAL) {
+                    continue;
+                }
+                PackagePart pp = getRelatedPart(pr);
+                if (ppn.equals(pp.getPartName().getName())) {
+                    return pr;
+                }
+            }
+        } catch (InvalidFormatException e) {
+            throw new POIXMLException("invalid package relationships", e);
+        }
+        return null;
+    }
 
 	/**
 	 * Adds an external relationship to a part (except relationships part).
