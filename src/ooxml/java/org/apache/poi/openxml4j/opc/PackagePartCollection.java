@@ -19,6 +19,7 @@ package org.apache.poi.openxml4j.opc;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.TreeMap;
 
 import org.apache.poi.openxml4j.exceptions.InvalidOperationException;
@@ -44,6 +45,10 @@ public final class PackagePartCollection {
 	 */
 	private final TreeMap<PackagePartName, PackagePart> packagePartCollection = new TreeMap<PackagePartName, PackagePart>();
 
+	/**
+	 * TreeMaps are expensive given the Natural Ordering of PackagePartNames
+	 */
+	private final HashMap<PackagePartName, PackagePart> packagePartLookup = new HashMap<PackagePartName, PackagePart>();
 
 
 	/**
@@ -69,11 +74,13 @@ public final class PackagePartCollection {
 			}
 		}
 		this.registerPartNameStr.add(partName.getName());
+		packagePartLookup.put(partName, part);
 		return packagePartCollection.put(partName, part);
 	}
 
 	public PackagePart remove(PackagePartName key) {
 		this.registerPartNameStr.remove(key.getName());
+		packagePartLookup.remove(key);
 		return packagePartCollection.remove(key);
 	}
 
@@ -84,11 +91,11 @@ public final class PackagePartCollection {
 	}
 
 	public boolean containsKey(PackagePartName partName) {
-		return packagePartCollection.containsKey(partName);
+		return packagePartLookup.containsKey(partName);
 	}
 
 	public PackagePart get(PackagePartName partName) {
-		return packagePartCollection.get(partName);
+		return packagePartLookup.get(partName);
 	}
 
 	public int size() {
