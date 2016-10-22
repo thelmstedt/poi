@@ -18,6 +18,7 @@
 package org.apache.poi.openxml4j.opc;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.TreeMap;
 
 import org.apache.poi.openxml4j.exceptions.InvalidOperationException;
@@ -28,10 +29,9 @@ import org.apache.poi.openxml4j.exceptions.InvalidOperationException;
  * @author Julien Chable
  * @version 0.1
  */
-public final class PackagePartCollection extends
-		TreeMap<PackagePartName, PackagePart> {
+public final class PackagePartCollection {
 
-	private static final long serialVersionUID = 2515031135957635515L;
+	private static final long serialVersionUID = 2515031135957635517L;
 
 	/**
 	 * Arraylist use to store this collection part names as string for rule
@@ -39,10 +39,12 @@ public final class PackagePartCollection extends
 	 */
 	private ArrayList<String> registerPartNameStr = new ArrayList<String>();
 
-	@Override
-	public Object clone() {
-		return super.clone();
-	}
+	/**
+	 * Internal mapping of package names to package parts.
+	 */
+	private final TreeMap<PackagePartName, PackagePart> packagePartCollection = new TreeMap<PackagePartName, PackagePart>();
+
+
 
 	/**
 	 * Check rule [M1.11]: a package implementer shall neither create nor
@@ -53,7 +55,6 @@ public final class PackagePartCollection extends
 	 *                Throws if you try to add a part with a name derived from
 	 *                another part name.
 	 */
-	@Override
 	public PackagePart put(PackagePartName partName, PackagePart part) {
 		String[] segments = partName.getURI().toASCIIString().split(
 				PackagingURIHelper.FORWARD_SLASH_STRING);
@@ -68,14 +69,29 @@ public final class PackagePartCollection extends
 			}
 		}
 		this.registerPartNameStr.add(partName.getName());
-		return super.put(partName, part);
+		return packagePartCollection.put(partName, part);
 	}
 
-	@Override
-	public PackagePart remove(Object key) {
-		if (key instanceof PackagePartName) {
-			this.registerPartNameStr.remove(((PackagePartName) key).getName());
-		}
-		return super.remove(key);
+	public PackagePart remove(PackagePartName key) {
+		this.registerPartNameStr.remove(key.getName());
+		return packagePartCollection.remove(key);
+	}
+
+
+	public Collection<PackagePart> values() {
+		return packagePartCollection.values();
+
+	}
+
+	public boolean containsKey(PackagePartName partName) {
+		return packagePartCollection.containsKey(partName);
+	}
+
+	public PackagePart get(PackagePartName partName) {
+		return packagePartCollection.get(partName);
+	}
+
+	public int size() {
+		return packagePartCollection.size();
 	}
 }

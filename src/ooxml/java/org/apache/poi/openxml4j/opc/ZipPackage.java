@@ -344,7 +344,7 @@ public final class ZipPackage extends OPCPackage {
             }
         }
 
-        return partList.values().toArray(new ZipPackagePart[partList.size()]);
+        return partList.values().toArray(new PackagePart[partList.size()]);
     }
 
     /**
