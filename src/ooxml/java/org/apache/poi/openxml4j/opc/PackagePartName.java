@@ -37,7 +37,7 @@ public final class PackagePartName implements Comparable<PackagePartName> {
 	/**
 	 * Part name stored as an URI.
 	 */
-	private URI partNameURI;
+	private final URI partNameURI;
 
 	/*
 	 * URI Characters definition (RFC 3986)
@@ -62,7 +62,12 @@ public final class PackagePartName implements Comparable<PackagePartName> {
 	/**
 	 * Flag to know if this part name is from a relationship part name.
 	 */
-	private boolean isRelationship;
+	private final boolean isRelationship;
+
+	/**
+	 * A normalised version of our {@link #partNameURI} for comparison
+	 */
+	private final String normalised;
 
 	/**
 	 * Constructor. Makes a ValidPartName object from a java.net.URI
@@ -91,6 +96,7 @@ public final class PackagePartName implements Comparable<PackagePartName> {
 		}
 		this.partNameURI = uri;
 		this.isRelationship = isRelationshipPartURI(this.partNameURI);
+		this.normalised = this.partNameURI.toASCIIString().toLowerCase(Locale.ROOT);
 	}
 
 	/**
@@ -127,6 +133,7 @@ public final class PackagePartName implements Comparable<PackagePartName> {
 		}
 		this.partNameURI = partURI;
 		this.isRelationship = isRelationshipPartURI(this.partNameURI);
+		this.normalised = this.partNameURI.toASCIIString().toLowerCase(Locale.ROOT);
 	}
 
 	/**
@@ -481,18 +488,22 @@ public final class PackagePartName implements Comparable<PackagePartName> {
 	public boolean equals(Object other) {
             if (other instanceof PackagePartName) {
                 // String.equals() is compatible with our compareTo(), but cheaper
-                return this.partNameURI.toASCIIString().toLowerCase(Locale.ROOT).equals
+                return getNormalised().equals
                 (
-                    ((PackagePartName) other).partNameURI.toASCIIString().toLowerCase(Locale.ROOT)
+                    ((PackagePartName) other).getNormalised()
                 );
             } else {
                 return false;
             }
         }
 
+	private String getNormalised() {
+		return this.normalised;
+	}
+
 	@Override
 	public int hashCode() {
-		return this.partNameURI.toASCIIString().toLowerCase(Locale.ROOT).hashCode();
+		return getNormalised().hashCode();
 	}
 
 	@Override
