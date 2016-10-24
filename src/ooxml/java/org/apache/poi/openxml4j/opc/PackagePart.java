@@ -534,8 +534,9 @@ public abstract class PackagePart implements RelationshipSource, Comparable<Pack
 		if (target == null){
 			return null;
 		}
-		if (partNameCache.containsKey(target)){
-			return partNameCache.get(target);
+		final PackagePartName ppn = partNameCache.get(target);
+		if (ppn != null){
+			return ppn;
 		} else {
 			final PackagePartName partName = PackagingURIHelper.createPartName(target);
 			partNameCache.put(target, partName);
