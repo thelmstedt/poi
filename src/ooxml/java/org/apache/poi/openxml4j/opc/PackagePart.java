@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 
 import org.apache.poi.POIXMLException;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
@@ -63,6 +64,12 @@ public abstract class PackagePart implements RelationshipSource, Comparable<Pack
 	 * This part's relationships.
 	 */
 	private PackageRelationshipCollection _relationships;
+
+	/**
+	 * Cache to avoid re-validating PackagePartNames continuously
+	 */
+	public HashMap<URI, PackagePartName> partNameCache = new HashMap<URI, PackagePartName>();
+
 
 	/**
 	 * Constructor.
@@ -497,13 +504,29 @@ public abstract class PackagePart implements RelationshipSource, Comparable<Pack
 	   }
 
 		// Turn that into a name, and fetch
-		PackagePartName relName = PackagingURIHelper.createPartName(target);
+		PackagePartName relName = getPartName(target);
 		PackagePart part = _container.getPart(relName);
 		if (part == null) {
             throw new IllegalArgumentException("No part found for relationship " + rel);
         }
 		return part;
 	}
+
+
+	private PackagePartName getPartName(URI target) throws InvalidFormatException {
+		if (target == null){
+			return null;
+		}
+		final PackagePartName ppn = partNameCache.get(target);
+		if (ppn != null){
+			return ppn;
+		} else {
+			final PackagePartName partName = PackagingURIHelper.createPartName(target);
+			partNameCache.put(target, partName);
+			return partName;
+		}
+	}
+
 
 	/**
 	 * Get the input stream of this part to read its content.
