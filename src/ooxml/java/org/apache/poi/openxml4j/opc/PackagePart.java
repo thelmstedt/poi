@@ -146,7 +146,7 @@ public abstract class PackagePart implements RelationshipSource, Comparable<Pack
                 if (pr.getTargetMode() == TargetMode.EXTERNAL) {
                     continue;
                 }
-                PackagePart pp = getRelatedPartKnownExisting(pr);
+                PackagePart pp = getRelatedPart(pr);
                 if (ppn.equals(pp.getPartName().getName())) {
                     return pr;
                 }
@@ -479,11 +479,7 @@ public abstract class PackagePart implements RelationshipSource, Comparable<Pack
 	 * @see org.apache.poi.openxml4j.opc.RelationshipSource#isRelationshipExists(org.apache.poi.openxml4j.opc.PackageRelationship)
 	 */
 	public boolean isRelationshipExists(PackageRelationship rel) {
-		for (PackageRelationship r : _relationships) {
-			if (r == rel)
-				return true;
-		}
-        return false;
+		return _relationships.getRelationshipByID(rel.getId()) != null;
 	}
 
    /**
@@ -497,37 +493,25 @@ public abstract class PackagePart implements RelationshipSource, Comparable<Pack
        if(! isRelationshipExists(rel)) {
           throw new IllegalArgumentException("Relationship " + rel + " doesn't start with this part " + _partName);
        }
-	   return getRelatedPartKnownExisting(rel);
+	   // Get the target URI, excluding any relative fragments
+	   URI target = rel.getTargetURI();
+	   if(target.getFragment() != null) {
+		   String t = target.toString();
+		   try {
+			   target = new URI( t.substring(0, t.indexOf('#')) );
+		   } catch(URISyntaxException e) {
+			   throw new InvalidFormatException("Invalid target URI: " + target);
+		   }
+	   }
 
-
+	   // Turn that into a name, and fetch
+	   PackagePartName relName = getPartName(target);
+	   PackagePart part = _container.getPart(relName);
+	   if (part == null) {
+		   throw new IllegalArgumentException("No part found for relationship " + rel);
+	   }
+	   return part;
    }
-
-	/**
-	 * Internal use only. If we know a PackageRelationship exists, we don't have to incur the expensive check for it.
-	 *
-	 * @param rel A relationship from this part to another one
-	 * @return The target part of the relationship
-     */
-	private PackagePart getRelatedPartKnownExisting(PackageRelationship rel) throws InvalidFormatException {
-		// Get the target URI, excluding any relative fragments
-		URI target = rel.getTargetURI();
-		if(target.getFragment() != null) {
-           String t = target.toString();
-           try {
-              target = new URI( t.substring(0, t.indexOf('#')) );
-           } catch(URISyntaxException e) {
-              throw new InvalidFormatException("Invalid target URI: " + target);
-           }
-        }
-
-		// Turn that into a name, and fetch
-		PackagePartName relName = getPartName(target);
-		PackagePart part = _container.getPart(relName);
-		if (part == null) {
-            throw new IllegalArgumentException("No part found for relationship " + rel);
-        }
-		return part;
-	}
 
 
 	private PackagePartName getPartName(URI target) throws InvalidFormatException {
